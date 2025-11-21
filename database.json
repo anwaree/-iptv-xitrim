@@ -1,0 +1,27 @@
+{
+  "servers": [
+    {
+      "name": "Extreme IPTV Demo",
+      "type": "extreme",
+      "url": "https://example.com/extreme-demo.m3u",
+      "channels": 1200,
+      "created": "2025-01-01"
+    },
+    {
+      "name": "Public Sample",
+      "type": "basic",
+      "url": "https://example.com/sample.m3u",
+      "channels": 500,
+      "created": "2025-02-10"
+    }
+  ],
+  "extremes": [],
+  "mods": [],
+  "ads": "",
+  "admins": [
+    {
+      "username": "admin",
+      "password": "admin123"
+    }
+  ]
+}

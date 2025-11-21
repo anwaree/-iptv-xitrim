@@ -1,0 +1,22 @@
+{
+  "servers": [
+    {
+      "name": "Extreme IPTV Demo",
+      "type": "extreme",
+      "url": "https://example.com/extreme-demo.m3u",
+      "expire": "2025-12-31"
+    },
+    {
+      "name": "Public Sample",
+      "type": "basic",
+      "url": "https://example.com/sample.m3u",
+      "expire": "2025-12-31"
+    }
+  ]
+}
+{
+  "name": "My New IPTV Server",
+  "type": "premium",
+  "url": "https://example.com/my-serveTTTTr.m3u",
+  "expire": "2025-12-31"
+}

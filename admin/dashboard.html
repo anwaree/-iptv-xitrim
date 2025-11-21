@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>لوحة التحكم - ixstrim IPTV</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style> body{font-family: Tahoma, sans-serif;} </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+<header class="bg-black/50 p-4">
+  <div class="container mx-auto flex justify-between items-center">
+    <h1 class="text-lg font-bold">لوحة التحكم - ixstrim IPTV</h1>
+    <div class="flex gap-2 items-center">
+      <button id="logoutBtn" class="px-3 py-1 bg-red-600 rounded hidden">تسجيل خروج</button>
+      <a href="../index.html" class="text-sm text-gray-300">عرض الواجهة الرئيسية</a>
+    </div>
+  </div>
+</header>
+
+<main class="container mx-auto p-6">
+
+  <!-- login area -->
+  <div id="loginArea" class="max-w-md mx-auto bg-black/40 p-6 rounded">
+    <h2 class="font-bold mb-3">تسجيل الدخول</h2>
+    <input id="adminUser" placeholder="اسم المستخدم" class="w-full mb-2 px-3 py-2 rounded bg-black/30" value="admin">
+    <input id="adminPass" type="password" placeholder="كلمة المرور" class="w-full mb-4 px-3 py-2 rounded bg-black/30">
+    <div class="flex gap-2">
+      <button id="loginBtn" class="flex-1 bg-green-600 px-3 py-2 rounded">دخول</button>
+      <button id="showAdminPassBtn" class="bg-yellow-500 px-3 py-2 rounded">عرض</button>
+    </div>
+    <p id="loginMsg" class="text-sm text-red-400 mt-2 hidden"></p>
+  </div>
+
+  <!-- dashboard area -->
+  <div id="dashboardArea" class="hidden">
+
+    <div class="grid md:grid-cols-3 gap-4 mb-4">
+      <div class="bg-black/40 p-4 rounded">
+        <div class="text-sm">إجمالي السيرفرات</div>
+        <div id="statServers" class="text-2xl font-bold">0</div>
+      </div>
+      <div class="bg-black/40 p-4 rounded">
+        <div class="text-sm">عدد المشرفين</div>
+        <div id="statMods" class="text-2xl font-bold">0</div>
+      </div>
+      <div class="bg-black/40 p-4 rounded">
+        <div class="text-sm">إعلانات مفعّلة</div>
+        <div id="statAds" class="text-2xl font-bold">لا</div>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="bg-black/40 p-4 rounded mb-4">
+      <nav class="flex gap-2 mb-4">
+        <button class="tabBtn px-3 py-1 bg-blue-600 rounded" data-tab="serversTab">السيرفرات</button>
+        <button class="tabBtn px-3 py-1 bg-gray-700 rounded" data-tab="modsTab">المشرفون</button>
+        <button class="tabBtn px-3 py-1 bg-gray-700 rounded" data-tab="adsTab">كود الإعلانات</button>
+      </nav>
+
+      <!-- Servers Tab -->
+      <div id="serversTab" class="tabPanel">
+        <div class="mb-3 flex gap-2">
+          <input id="s_name" placeholder="اسم السيرفر" class="px-3 py-2 rounded bg-black/30 flex-1">
+          <input id="s_url" placeholder="رابط التحميل المباشر" class="px-3 py-2 rounded bg-black/30 flex-1">
+          <select id="s_type" class="px-3 py-2 rounded bg-black/30">
+            <option value="basic">أساسي</option>
+            <option value="premium">مميز</option>
+          </select>
+          <button id="addServerBtn" class="bg-green-600 px-4 py-2 rounded">أضف</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="serversTable" class="w-full text-sm">
+            <thead class="text-gray-300">
+              <tr><th class="p-2 text-right">الاسم</th><th class="p-2 text-right">النوع</th><th class="p-2 text-right">رابط</th><th class="p-2 text-right">إجراءات</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mods Tab -->
+      <div id="modsTab" class="tabPanel hidden">
+        <div class="mb-3 flex gap-2">
+          <input id="mod_user" placeholder="اسم المشرف" class="px-3 py-2 rounded bg-black/30 flex-1">
+          <input id="mod_pass" placeholder="كلمة المرور" class="px-3 py-2 rounded bg-black/30 flex-1">
+          <button id="addModBtn" class="bg-emerald-600 px-4 py-2 rounded">أضف مشرف</button>
+        </div>
+        <div id="modsList" class="space-y-2"></div>
+      </div>
+
+      <!-- Ads Tab -->
+      <div id="adsTab" class="tabPanel hidden">
+        <div>
+          <textarea id="adsCode" rows="6" class="w-full p-3 rounded bg-black/30" placeholder="الصق كود AdSense أو HTML/JS هنا"></textarea>
+          <div class="flex gap-2 mt-2">
+            <button id="saveAdsBtn" class="bg-blue-600 px-3 py-2 rounded">حفظ الكود</button>
+            <button id="clearAdsBtn" class="bg-red-600 px-3 py-2 rounded">إزالة الكود</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+// --- قاعدة البيانات ---
+let db = JSON.parse(localStorage.getItem("ix_database_v1")) || { servers: [], mods: [], adsense_code: "" };
+
+// --- تبويبات ---
+document.querySelectorAll(".tabBtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabPanel").forEach(p=>p.classList.add("hidden"));
+    document.querySelectorAll(".tabBtn").forEach(b=>b.classList.remove("bg-blue-600"));
+    document.querySelectorAll(".tabBtn").forEach(b=>b.classList.add("bg-gray-700"));
+    document.getElementById(btn.dataset.tab).classList.remove("hidden");
+    btn.classList.add("bg-blue-600");
+  });
+});
+
+// --- تسجيل دخول مع التحقق من المشرفين ---
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  const u = document.getElementById("adminUser").value.trim();
+  const p = document.getElementById("adminPass").value.trim();
+  const isMod = db.mods.some(mod=>mod.user===u && mod.pass===p);
+  if((u==="admin" && p==="admin2121") || isMod){
+    document.getElementById("loginArea").classList.add("hidden");
+    document.getElementById("dashboardArea").classList.remove("hidden");
+    renderServersTable();
+    renderMods();
+    updateStats();
+  } else {
+    const msg = document.getElementById("loginMsg");
+    msg.textContent = "اسم المستخدم أو كلمة المرور خاطئة!";
+    msg.classList.remove("hidden");
+  }
+});
+
+// --- إضافة سيرفر ---
+document.getElementById("addServerBtn").addEventListener("click", ()=>{
+  const name = document.getElementById("s_name").value.trim();
+  const url = document.getElementById("s_url").value.trim();
+  const type = document.getElementById("s_type").value;
+  if(name && url){
+    db.servers.push({name,url,type});
+    localStorage.setItem("ix_database_v1", JSON.stringify(db));
+    renderServersTable();
+    updateStats();
+    document.getElementById("s_name").value="";
+    document.getElementById("s_url").value="";
+  } else alert("يرجى إدخال الاسم والرابط.");
+});
+
+// --- جدول السيرفرات مع عد تنازلي عند التحميل ---
+function renderServersTable(){
+  const tbody = document.querySelector("#serversTable tbody");
+  tbody.innerHTML="";
+  db.servers.forEach((srv,i)=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2 text-right">${srv.name}</td>
+      <td class="p-2 text-right">${srv.type}</td>
+      <td class="p-2 text-right">
+        <button onclick="downloadServer('${srv.url}')" class="px-2 py-1 bg-green-600 rounded">تحميل</button>
+      </td>
+      <td class="p-2 text-right">
+        <button onclick="deleteServer(${i})" class="px-2 py-1 bg-red-600 rounded">حذف</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// --- تنزيل السيرفر مع عد تنازلي 15 ثانية ---
+function downloadServer(url){
+  const overlay = document.createElement("div");
+  overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;";
+  const box = document.createElement("div");
+  box.style = "background:#fff;color:#000;padding:20px;border-radius:8px;text-align:center;max-width:300px;width:80%;";
+  box.innerHTML = `<p id="countdown">سيتم التحميل بعد 15 ثانية</p>`;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  let count=15;
+  const interval = setInterval(()=>{
+    count--;
+    box.querySelector("#countdown").textContent=`سيتم التحميل بعد ${count} ثانية`;
+    if(count<=0){
+      clearInterval(interval);
+      window.location.href=url;
+      document.body.removeChild(overlay);
+    }
+  },1000);
+}
+
+// --- حذف سيرفر ---
+function deleteServer(index){
+  if(confirm("هل تريد حذف هذا السيرفر؟")){
+    db.servers.splice(index,1);
+    localStorage.setItem("ix_database_v1", JSON.stringify(db));
+    renderServersTable();
+    updateStats();
+  }
+}
+
+// --- إدارة المشرفين ---
+function renderMods(){
+  const list = document.getElementById("modsList");
+  list.innerHTML="";
+  db.mods.forEach((mod,i)=>{
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <span>${mod.user}</span> |
+      <span>${mod.pass}</span>
+      <button onclick="deleteMod(${i})" class="px-2 py-1 bg-red-600 rounded">حذف</button>
+      <button onclick="resetMod(${i})" class="px-2 py-1 bg-yellow-600 rounded">إعادة تعيين كلمة المرور</button>
+    `;
+    list.appendChild(div);
+  });
+}
+document.getElementById("addModBtn").addEventListener("click", ()=>{
+  const user = document.getElementById("mod_user").value.trim();
+  const pass = document.getElementById("mod_pass").value.trim();
+  if(user && pass){
+    db.mods.push({user, pass});
+    localStorage.setItem("ix_database_v1", JSON.stringify(db));
+    renderMods();
+    updateStats();
+    document.getElementById("mod_user").value="";
+    document.getElementById("mod_pass").value="";
+  } else alert("يرجى إدخال اسم المشرف وكلمة المرور.");
+});
+function deleteMod(i){
+  if(confirm("هل تريد حذف هذا المشرف؟")){
+    db.mods.splice(i,1);
+    localStorage.setItem("ix_database_v1", JSON.stringify(db));
+    renderMods();
+    updateStats();
+  }
+}
+function resetMod(i){
+  const newPass = prompt("أدخل كلمة المرور الجديدة:");
+  if(newPass){
+    db.mods[i].pass = newPass;
+    localStorage.setItem("ix_database_v1", JSON.stringify(db));
+    renderMods();
+  }
+}
+
+// --- حفظ كود الإعلانات ---
+document.getElementById("saveAdsBtn").addEventListener("click", ()=>{
+  db.adsense_code = document.getElementById("adsCode").value;
+  localStorage.setItem("ix_database_v1", JSON.stringify(db));
+  updateStats();
+});
+
+// --- إزالة كود الإعلانات ---
+document.getElementById("clearAdsBtn").addEventListener("click", ()=>{
+  db.adsense_code = "";
+  localStorage.setItem("ix_database_v1", JSON.stringify(db));
+  document.getElementById("adsCode").value="";
+  updateStats();
+});
+
+// --- تحديث الإحصائيات ---
+function updateStats(){
+  document.getElementById("statServers").textContent = db.servers.length;
+  document.getElementById("statMods").textContent = db.mods.length;
+  document.getElementById("statAds").textContent = db.adsense_code ? "نعم" : "لا";
+}
+</script>
+
+</body>
+</html>
